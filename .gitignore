@@ -1,0 +1,28 @@
+# Virtual environment
+venv/
+env/
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+
+# Jupyter checkpoints
+.ipynb_checkpoints/
+
+# Large data files (don't push rasters to GitHub)
+data/raw/rasters/*.tif
+data/processed/rasters/*.tif
+outputs/maps/*.tif
+
+# Model files (large)
+outputs/models/*.pkl
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# VS Code
+.vscode/
