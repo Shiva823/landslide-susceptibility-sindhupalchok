@@ -42,7 +42,7 @@ task_river = ee.batch.Export.image.toDrive(
     fileNamePrefix='Sindhupalchok_RiverProximity',
     region=aoi,
     scale=30,
-    crs='EPSG:32645',
+    crs='EPSG:4326',
     maxPixels=1e13,
     fileFormat='GeoTIFF'
 )
@@ -79,7 +79,7 @@ task_road = ee.batch.Export.image.toDrive(
     fileNamePrefix='Sindhupalchok_RoadProximity',
     region=aoi,
     scale=30,
-    crs='EPSG:32645',
+    crs='EPSG:4326',
     maxPixels=1e13,
     fileFormat='GeoTIFF'
 )
