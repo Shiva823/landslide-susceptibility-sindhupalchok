@@ -19,6 +19,7 @@ Usage:
     Run preprocessing : python main.py --step preprocess
     Run features      : python main.py --step features
     Run models        : python main.py --step model
+    Run validation    : python main.py --step validate
 ═══════════════════════════════════════════════════════════════
 """
 
@@ -87,6 +88,15 @@ def run_model():
 
 
 # ── Main ────────────────────────────────────────────────────────────
+def run_validation():
+    print_step(5, "Susceptibility Map Validation")
+    from src.validation import validate_susceptibility_map
+    start = time.time()
+    validate_susceptibility_map()
+    print(f"\n✅ Validation done in {time.time() - start:.1f}s")
+    print("   Validation outputs → outputs/maps/ and outputs/figures/")
+
+
 def main():
     print_banner()
 
@@ -96,7 +106,7 @@ def main():
     parser.add_argument(
         "--step",
         type=str,
-        choices=["eda", "preprocess", "features", "model", "all"],
+        choices=["eda", "preprocess", "features", "model", "validate", "all"],
         default="all",
         help="Which step to run (default: all)"
     )
@@ -116,11 +126,15 @@ def main():
     elif args.step == "model":
         run_model()
 
+    elif args.step == "validate":
+        run_validation()
+
     elif args.step == "all":
         run_eda()
         run_preprocessing()
         run_features()
         run_model()
+        run_validation()
 
     print(f"""
 {'═'*55}

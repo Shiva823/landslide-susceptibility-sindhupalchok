@@ -1,0 +1,8 @@
+feature,q1,q3,iqr,lower_bound,upper_bound,outliers,step,rows_before,rows_after,rows_removed,detail
+Slope,32.69052505493164,45.4854850769043,12.794960021972656,13.498085021972656,64.67792510986328,31,eda_iqr_outlier_bounds,,,,Feature-specific 1.5*IQR thresholds calculated after missing/domain cleaning.
+Elevation,1499.0,2368.0,869.0,195.5,3671.5,56,eda_iqr_outlier_bounds,,,,Feature-specific 1.5*IQR thresholds calculated after missing/domain cleaning.
+NDVI,0.40125173330307007,0.6920583248138428,0.2908065915107727,-0.03495815396308899,1.1282682120800018,0,eda_iqr_outlier_bounds,,,,Feature-specific 1.5*IQR thresholds calculated after missing/domain cleaning.
+Rainfall,4.5489630699157715,4.903069972991943,0.3541069030761719,4.017802715301514,5.434230327606201,125,eda_iqr_outlier_bounds,,,,Feature-specific 1.5*IQR thresholds calculated after missing/domain cleaning.
+River Proximity,1230.0,5816.364844127301,4586.364844127301,-5649.547266190952,12695.912110318252,30,eda_iqr_outlier_bounds,,,,Feature-specific 1.5*IQR thresholds calculated after missing/domain cleaning.
+Road Proximity,60.0,536.6563145999496,476.6563145999496,-654.9844718999244,1251.6407864998741,132,eda_iqr_outlier_bounds,,,,Feature-specific 1.5*IQR thresholds calculated after missing/domain cleaning.
+TWI,14.34612054135906,14.934302791728198,0.5881822503691385,13.463847165805351,15.816576167281905,44,eda_iqr_outlier_bounds,,,,Feature-specific 1.5*IQR thresholds calculated after missing/domain cleaning.

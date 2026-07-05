@@ -1,0 +1,5 @@
+step,rows_before,rows_after,rows_removed,detail
+duplicate_coordinate_removal,1434,1434,0,Dropped exact duplicate longitude/latitude pairs.
+missing_value_removal,1434,1429,5,Dropped rows with missing/NoData values in any required feature.
+domain_rule_filtering,1429,1429,0,Applied physical bounds for coordinates and raster feature values.
+eda_iqr_outlier_removal,1429,1109,320,Removed 1.5*IQR outliers for continuous non-circular EDA features only.

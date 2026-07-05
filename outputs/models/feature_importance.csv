@@ -1,0 +1,18 @@
+model,feature,importance_type,importance
+Random Forest,numeric__TWI,feature_importance,0.20696401234211398
+Random Forest,numeric__Slope,feature_importance,0.16466415256641512
+Random Forest,numeric__Rainfall,feature_importance,0.13318584217600915
+Random Forest,numeric__Elevation,feature_importance,0.1238852687681512
+Random Forest,numeric__NDVI,feature_importance,0.08497413379133023
+Random Forest,numeric__Road Proximity,feature_importance,0.08495077753845295
+Random Forest,numeric__River Proximity,feature_importance,0.06450425962692202
+Random Forest,numeric__Aspect_cos,feature_importance,0.05585746834604773
+Random Forest,numeric__Aspect_sin,feature_importance,0.05019794483888526
+Random Forest,lulc__LULC_10.0,feature_importance,0.011707023109291441
+Random Forest,lulc__LULC_30.0,feature_importance,0.008041387195259094
+Random Forest,lulc__LULC_60.0,feature_importance,0.0077168134245318605
+Random Forest,lulc__LULC_100.0,feature_importance,0.0014733500403566987
+Random Forest,lulc__LULC_40.0,feature_importance,0.0010621828358344406
+Random Forest,lulc__LULC_70.0,feature_importance,0.0007657328809276132
+Random Forest,lulc__LULC_80.0,feature_importance,4.965051947135085e-05
+Random Forest,lulc__LULC_50.0,feature_importance,0.0

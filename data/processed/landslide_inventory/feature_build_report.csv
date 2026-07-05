@@ -1,0 +1,6 @@
+metric,value
+clean_landslide_samples,1109.0
+background_samples,1109.0
+total_training_rows,2218.0
+min_background_distance_degrees,0.0009
+random_seed,42.0

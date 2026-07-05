@@ -87,7 +87,8 @@ N_FOLDS     = 5
 TARGET_CRS  = "EPSG:4326"
 
 # ── OUTPUT FILE PATHS ───────────────────────────────────────────────
-TRAINING_CSV       = os.path.join(INVENTORY_DIR, "training_dataset.csv")
+CLEAN_LANDSLIDE_CSV = os.path.join(INVENTORY_DIR, "clean_landslide_samples.csv")
+TRAINING_CSV        = os.path.join(INVENTORY_DIR, "training_dataset.csv")
 BEST_MODEL_PKL     = os.path.join(MODELS_DIR,    "best_model.pkl")
 SUSCEPTIBILITY_MAP = os.path.join(MAPS_DIR,      "susceptibility_map.tif")
 

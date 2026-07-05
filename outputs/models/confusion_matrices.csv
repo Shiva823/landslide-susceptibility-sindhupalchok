@@ -1,0 +1,4 @@
+model,true_negative,false_positive,false_negative,true_positive
+Random Forest,180,42,20,202
+SVM,179,43,23,199
+Logistic Regression,174,48,43,179

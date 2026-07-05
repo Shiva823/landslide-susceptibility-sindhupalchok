@@ -1,0 +1,11 @@
+Landslide susceptibility model summary
+Best model: Random Forest
+Train rows: 1774
+Test rows: 444
+Best model pickle: D:\sindupalchok_landslide\outputs\models\best_model.pkl
+Susceptibility map: D:\sindupalchok_landslide\outputs\maps\susceptibility_map.tif
+
+              model  train_rows  test_rows  cv_roc_auc_mean  cv_roc_auc_std  test_accuracy  test_precision  test_recall  test_f1  test_roc_auc
+      Random Forest        1774        444         0.912504        0.018490       0.860360        0.827869     0.909910 0.866953      0.924113
+                SVM        1774        444         0.906262        0.015515       0.844595        0.809717     0.900901 0.852878      0.920948
+Logistic Regression        1774        444         0.864438        0.009818       0.795045        0.788546     0.806306 0.797327      0.871459
