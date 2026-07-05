@@ -20,6 +20,8 @@ Usage:
     Run features      : python main.py --step features
     Run models        : python main.py --step model
     Run validation    : python main.py --step validate
+    Run dynamic risk  : python main.py --step risk
+    Export web app    : python main.py --step app
 ═══════════════════════════════════════════════════════════════
 """
 
@@ -27,6 +29,9 @@ import argparse
 import sys
 import os
 import time
+
+if hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(encoding="utf-8")
 
 # ── Make src importable ─────────────────────────────────────────────
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -97,6 +102,24 @@ def run_validation():
     print("   Validation outputs → outputs/maps/ and outputs/figures/")
 
 
+def run_dynamic_risk():
+    print_step(6, "Dynamic Landslide Warning from Live Rainfall")
+    from src.dynamic_risk import generate_dynamic_landslide_risk_map
+    start = time.time()
+    generate_dynamic_landslide_risk_map()
+    print(f"\nDynamic warning done in {time.time() - start:.1f}s")
+    print("   Dynamic warning outputs -> outputs/maps/, outputs/figures/, and reports/")
+
+
+def run_web_app_export():
+    print_step(7, "Web App Asset Export")
+    from src.export_web_app import export_web_app_assets
+    start = time.time()
+    export_web_app_assets()
+    print(f"\nWeb app export done in {time.time() - start:.1f}s")
+    print("   Open web app -> web_app/index.html")
+
+
 def main():
     print_banner()
 
@@ -106,7 +129,16 @@ def main():
     parser.add_argument(
         "--step",
         type=str,
-        choices=["eda", "preprocess", "features", "model", "validate", "all"],
+        choices=[
+            "eda",
+            "preprocess",
+            "features",
+            "model",
+            "validate",
+            "risk",
+            "app",
+            "all",
+        ],
         default="all",
         help="Which step to run (default: all)"
     )
@@ -129,12 +161,20 @@ def main():
     elif args.step == "validate":
         run_validation()
 
+    elif args.step == "risk":
+        run_dynamic_risk()
+
+    elif args.step == "app":
+        run_web_app_export()
+
     elif args.step == "all":
         run_eda()
         run_preprocessing()
         run_features()
         run_model()
         run_validation()
+        run_dynamic_risk()
+        run_web_app_export()
 
     print(f"""
 {'═'*55}

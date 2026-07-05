@@ -68,6 +68,7 @@ MODEL_FEATURES = [
 CATEGORICAL_FEATURES = ["LULC"]
 NUMERIC_FEATURES = [col for col in MODEL_FEATURES if col not in CATEGORICAL_FEATURES]
 MAP_NODATA = -9999.0
+COARSE_RESOLUTION_RATIO = 10
 
 
 def _add_engineered_features(df):
@@ -217,6 +218,22 @@ def _extract_feature_importance(best_model, best_name):
     ).sort_values("importance", ascending=False)
 
 
+def _select_resampling(feature, src, reference_profile):
+    if feature == "LULC":
+        return Resampling.nearest
+
+    ref_xres = abs(reference_profile["transform"].a)
+    ref_yres = abs(reference_profile["transform"].e)
+    src_xres = abs(src.transform.a)
+    src_yres = abs(src.transform.e)
+    is_coarse = (
+        src_xres >= ref_xres * COARSE_RESOLUTION_RATIO
+        or src_yres >= ref_yres * COARSE_RESOLUTION_RATIO
+    )
+
+    return Resampling.cubic_spline if is_coarse else Resampling.bilinear
+
+
 def _read_feature_on_reference_grid(feature, path, reference_profile):
     with rasterio.open(path) as src:
         source = src.read(1).astype(np.float32)
@@ -231,7 +248,7 @@ def _read_feature_on_reference_grid(feature, path, reference_profile):
             np.nan,
             dtype=np.float32,
         )
-        resampling = Resampling.nearest if feature == "LULC" else Resampling.bilinear
+        resampling = _select_resampling(feature, src, reference_profile)
         reproject(
             source=source,
             destination=destination,

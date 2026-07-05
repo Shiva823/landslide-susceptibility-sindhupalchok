@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Sindhupalchok Landslide Warning</title>
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+      integrity="sha256-p4NxAoJBhIINfQwJS7tPHyFhccwF9M1YcS19a8gWg8="
+      crossorigin=""
+    />
+    <link rel="stylesheet" href="styles.css?v=3" />
+  </head>
+  <body>
+    <main class="app-shell">
+      <aside class="sidebar">
+        <section class="brand">
+          <p class="eyebrow">Sindhupalchok District</p>
+          <h1>Landslide Warning Dashboard</h1>
+          <p class="timestamp" id="updatedAt">Loading live rainfall run...</p>
+        </section>
+
+        <section class="panel metrics-grid" aria-label="Current warning metrics">
+          <div class="metric">
+            <span>Max 1h Rain</span>
+            <strong id="maxRain1h">--</strong>
+          </div>
+          <div class="metric">
+            <span>Max 24h Rain</span>
+            <strong id="maxRain24h">--</strong>
+          </div>
+          <div class="metric">
+            <span>High + Severe</span>
+            <strong id="highSevereArea">--</strong>
+          </div>
+          <div class="metric">
+            <span>Severe Area</span>
+            <strong id="severeArea">--</strong>
+          </div>
+        </section>
+
+        <section class="panel">
+          <div class="panel-title">
+            <h2>Rainfall Window</h2>
+          </div>
+          <div class="segmented" id="windowControl" role="tablist">
+            <button class="active" data-window="combined">Combined</button>
+            <button data-window="1h">1h</button>
+            <button data-window="3h">3h</button>
+            <button data-window="24h">24h</button>
+            <button data-window="72h">72h</button>
+          </div>
+        </section>
+
+        <section class="panel">
+          <div class="panel-title">
+            <h2>Live Update</h2>
+          </div>
+          <button class="refresh-button" id="refreshButton" type="button">
+            Refresh rainfall and risk map
+          </button>
+          <p class="status-text" id="refreshStatus">
+            Uses the latest exported Open-Meteo run.
+          </p>
+        </section>
+
+        <section class="panel">
+          <div class="panel-title">
+            <h2>Map Layers</h2>
+          </div>
+          <label class="toggle-row">
+            <input type="checkbox" id="riskToggle" checked />
+            <span>Dynamic warning map</span>
+          </label>
+          <label class="toggle-row">
+            <input type="checkbox" id="susceptibilityToggle" />
+            <span>Static susceptibility</span>
+          </label>
+          <label class="toggle-row">
+            <input type="checkbox" id="rainfallToggle" checked />
+            <span>Rainfall sample points</span>
+          </label>
+          <label class="toggle-row">
+            <input type="checkbox" id="landslideToggle" />
+            <span>Landslide inventory points</span>
+          </label>
+        </section>
+
+        <section class="panel">
+          <div class="panel-title">
+            <h2>Warning Classes</h2>
+          </div>
+          <div class="legend">
+            <span><i style="background:#2c7bb6"></i>Low</span>
+            <span><i style="background:#abd9e9"></i>Guarded</span>
+            <span><i style="background:#ffffbf"></i>Moderate</span>
+            <span><i style="background:#fdae61"></i>High</span>
+            <span><i style="background:#d7191c"></i>Severe</span>
+          </div>
+        </section>
+
+        <section class="panel">
+          <div class="panel-title">
+            <h2>Risk Distribution</h2>
+          </div>
+          <div id="riskBars" class="bars"></div>
+        </section>
+      </aside>
+
+      <section class="map-area">
+        <div id="map" aria-label="Interactive landslide warning map"></div>
+        <div class="map-caption">
+          <strong>Dynamic risk</strong> combines the static susceptibility map
+          with recent Open-Meteo rainfall totals. Static terrain susceptibility
+          itself does not change in real time.
+        </div>
+      </section>
+    </main>
+
+    <script
+      src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+      integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+      crossorigin=""
+    ></script>
+    <script src="app.js?v=3"></script>
+  </body>
+</html>

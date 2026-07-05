@@ -21,6 +21,30 @@ susceptibility mapping of Sindhupalchok District, Nepal.
 - Support Vector Machine (SVM)
 - Logistic Regression
 
+## Dynamic Warning Map
+The project can also generate a rainfall-triggered landslide warning map using
+live Open-Meteo rainfall data over Sindhupalchok. The susceptibility map remains
+the static terrain baseline, while recent 1h, 3h, 24h, and 72h rainfall totals
+update the dynamic risk score.
+
+```bash
+python main.py --step risk
+```
+
+Outputs are saved to `outputs/maps/`, `outputs/figures/`, and `reports/`.
+
+## Web Dashboard
+Export the interactive dashboard assets after generating susceptibility,
+validation, and dynamic warning outputs.
+
+```bash
+python main.py --step app
+python -m src.serve_web_app
+```
+
+Then open `http://127.0.0.1:8000/`. The dashboard refresh button works
+when served with `src.serve_web_app`.
+
 ## Setup
 ```bash
 python -m venv venv
