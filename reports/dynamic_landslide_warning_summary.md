@@ -10,15 +10,15 @@
 
 ## Current Rainfall Signal
 
-- Max 1-hour rainfall: 3.3 mm
-- Max 3-hour rainfall: 9.8 mm
-- Max 24-hour rainfall: 38.8 mm
-- Max 72-hour rainfall: 78.5 mm
-- Max rainfall trigger score: 0.436
+- Max 1-hour rainfall: 7.8 mm
+- Max 3-hour rainfall: 13.0 mm
+- Max 24-hour rainfall: 23.8 mm
+- Max 72-hour rainfall: 70.5 mm
+- Max rainfall trigger score: 0.392
 
 ## Dynamic Warning Area
 
-- High + Severe warning area: 7.2%
-- Severe warning area: 0.2%
+- High + Severe warning area: 5.9%
+- Severe warning area: 0.1%
 
 This is a dynamic warning layer. The terrain susceptibility map stays static, while the warning score changes when rainfall changes.
