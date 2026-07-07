@@ -14,6 +14,7 @@ const state = {
   boundaryLayer: null,
   rainfallLayer: null,
   landslideLayer: null,
+  rainfallMarkers: new Map(),
   currentWindow: "combined",
 };
 
@@ -22,6 +23,12 @@ const formatNumber = (value, digits = 1) =>
     maximumFractionDigits: digits,
     minimumFractionDigits: digits,
   });
+
+const formatPercent = (value) => {
+  const numeric = Number(value || 0);
+  const digits = numeric > 0 && numeric < 1 ? 2 : 1;
+  return `${formatNumber(numeric, digits)}%`;
+};
 
 const setText = (id, value) => {
   document.getElementById(id).textContent = value;
@@ -100,6 +107,11 @@ function markerPopup(properties) {
 }
 
 function addPointLayers(rainfall, landslides) {
+  rainfall.features.forEach((feature, index) => {
+    feature.properties.sample_index = index + 1;
+  });
+  state.rainfallMarkers.clear();
+
   state.rainfallLayer = L.geoJSON(rainfall, {
     pointToLayer: (feature, latlng) => {
       const trigger = Number(feature.properties.rainfall_trigger_score || 0);
@@ -113,6 +125,7 @@ function addPointLayers(rainfall, landslides) {
       });
     },
     onEachFeature: (feature, layer) => {
+      state.rainfallMarkers.set(feature.properties.sample_index, layer);
       layer.bindPopup(markerPopup(feature.properties));
     },
   }).addTo(state.map);
@@ -142,8 +155,8 @@ function updateCards() {
   const cards = state.data.cards;
   setText("maxRain1h", `${formatNumber(cards.maxRain1h)} mm`);
   setText("maxRain24h", `${formatNumber(cards.maxRain24h)} mm`);
-  setText("highSevereArea", `${formatNumber(cards.highSevereArea)}%`);
-  setText("severeArea", `${formatNumber(cards.severeArea)}%`);
+  setText("highSevereArea", formatPercent(cards.highSevereArea));
+  setText("severeArea", formatPercent(cards.severeArea));
   setText(
     "updatedAt",
     `Rainfall timestamp: ${state.data.rainfallLatestTime} | Generated: ${state.data.generatedAt}`,
@@ -161,9 +174,139 @@ function updateBars() {
       <span class="bar-track">
         <span class="bar-fill" style="width:${row.area_percent}%; background:${riskColors[row.risk_label]}"></span>
       </span>
-      <span>${formatNumber(row.area_percent)}%</span>
+      <span>${formatPercent(row.area_percent)}</span>
     `;
     container.appendChild(wrapper);
+  });
+}
+
+function warningDetails() {
+  const cards = state.data.cards;
+  const highSevere = Number(cards.highSevereArea || 0);
+  const severe = Number(cards.severeArea || 0);
+  const trigger = Number(cards.maxTrigger || 0);
+  const rain72h = Number(cards.maxRain72h || 0);
+
+  if (severe >= 1 || highSevere >= 12 || trigger >= 0.6) {
+    return {
+      label: "Elevated",
+      title: "High attention needed",
+      color: "#d7191c",
+      reason:
+        `The current rainfall trigger reaches ${formatNumber(trigger, 2)} and ${formatPercent(highSevere)} of the district is in high or severe dynamic warning.`,
+    };
+  }
+  if (highSevere >= 5 || trigger >= 0.3 || rain72h >= 60) {
+    return {
+      label: "Watch",
+      title: "Rainfall is lifting risk in susceptible terrain",
+      color: "#f97316",
+      reason:
+        `The strongest 72h rainfall total is ${formatNumber(rain72h)} mm. The map should be inspected around high-susceptibility slopes touched by the wetter sample points.`,
+    };
+  }
+  return {
+    label: "Normal",
+    title: "No broad warning spike in this run",
+    color: "#0f766e",
+    reason:
+      `Recent rainfall is present, but only ${formatPercent(highSevere)} of the district is currently mapped as high or severe dynamic warning.`,
+  };
+}
+
+function updateWarningPanel() {
+  const details = warningDetails();
+  const badge = document.getElementById("warningBadge");
+  badge.textContent = details.label;
+  badge.style.background = details.color;
+  setText("warningTitle", details.title);
+  setText("warningReason", details.reason);
+}
+
+function updateRainfallBars() {
+  const cards = state.data.cards;
+  const rows = [
+    ["1h", cards.maxRain1h, 20],
+    ["3h", cards.maxRain3h, 40],
+    ["24h", cards.maxRain24h, 100],
+    ["72h", cards.maxRain72h, 180],
+  ];
+  const container = document.getElementById("rainfallBars");
+  container.innerHTML = "";
+
+  rows.forEach(([label, value, scale]) => {
+    const width = Math.min(100, (Number(value || 0) / scale) * 100);
+    const row = document.createElement("div");
+    row.className = "rain-row";
+    row.innerHTML = `
+      <span>${label}</span>
+      <span class="rain-track">
+        <span class="rain-fill" style="width:${width}%; background:#0f766e"></span>
+      </span>
+      <span>${formatNumber(value)} mm</span>
+    `;
+    container.appendChild(row);
+  });
+}
+
+function updateValidationSignal() {
+  const susceptibility = state.data.summaries.susceptibility || [];
+  const highClasses = susceptibility.filter((row) =>
+    ["High", "Very High"].includes(row.class_label),
+  );
+  const area = highClasses.reduce(
+    (total, row) => total + Number(row.area_percent || 0),
+    0,
+  );
+  const landslides = highClasses.reduce(
+    (total, row) => total + Number(row.landslide_percent || 0),
+    0,
+  );
+
+  setText("validationArea", formatPercent(area));
+  setText("validationSlides", formatPercent(landslides));
+  setText(
+    "validationText",
+    ` A smaller share of terrain contains most recorded landslides, so the susceptibility map is concentrating past failures into the highest classes.`,
+  );
+}
+
+function updateHotspots() {
+  const container = document.getElementById("hotspotList");
+  const points = [...(state.data.summaries.rainfall || [])]
+    .map((point, index) => ({ ...point, sample_index: index + 1 }))
+    .sort(
+      (a, b) =>
+        Number(b.rainfall_trigger_score || 0) -
+        Number(a.rainfall_trigger_score || 0),
+    )
+    .slice(0, 4);
+
+  container.innerHTML = "";
+  points.forEach((point, rank) => {
+    const button = document.createElement("button");
+    button.className = "hotspot-button";
+    button.type = "button";
+    button.innerHTML = `
+      <strong>Sample ${point.sample_index} · ${formatNumber(point.rain_72h_mm)} mm / 72h</strong>
+      <span>#${rank + 1}</span>
+      <small>${formatNumber(point.rain_24h_mm)} mm / 24h · trigger ${formatNumber(point.rainfall_trigger_score, 2)}</small>
+    `;
+    button.addEventListener("click", () => {
+      const layer = state.rainfallMarkers.get(point.sample_index);
+      const latlng = L.latLng(point.latitude, point.longitude);
+      state.map.setView(latlng, Math.max(state.map.getZoom(), 12), {
+        animate: true,
+      });
+      if (layer) {
+        if (!state.map.hasLayer(state.rainfallLayer)) {
+          document.getElementById("rainfallToggle").checked = true;
+          state.rainfallLayer.addTo(state.map);
+        }
+        layer.openPopup();
+      }
+    });
+    container.appendChild(button);
   });
 }
 
@@ -180,6 +323,64 @@ function refreshRiskLayer(windowName) {
   if (document.getElementById("riskToggle").checked) {
     state.riskLayer.addTo(state.map);
   }
+}
+
+function coordinateText(latlng) {
+  return `${latlng.lat.toFixed(5)}, ${latlng.lng.toFixed(5)}`;
+}
+
+function locationPopupContent(result, latlng) {
+  const place = result.place || "Sindhupalchok District";
+  const rows = [
+    result.localName ? `Local place: ${result.localName}` : null,
+    result.municipality ? `Municipality: ${result.municipality}` : null,
+    result.district ? `District: ${result.district}` : null,
+    result.province ? `Province: ${result.province}` : null,
+  ].filter(Boolean);
+
+  return `
+    <strong>${place}</strong>
+    ${rows.length ? `${rows.join("<br>")}<br>` : ""}
+    Lat/Lon: ${coordinateText(latlng)}
+    <span class="popup-muted">${result.displayName || "Place name from map lookup"}</span>
+  `;
+}
+
+async function lookupPlace(latlng) {
+  const params = new URLSearchParams({
+    lat: latlng.lat,
+    lon: latlng.lng,
+  });
+  const response = await fetch(`/api/reverse-geocode?${params.toString()}`, {
+    cache: "no-store",
+  });
+  if (!response.ok) {
+    throw new Error("Place lookup unavailable");
+  }
+  return response.json();
+}
+
+function bindMapClickLookup() {
+  state.map.on("click", async (event) => {
+    const popup = L.popup()
+      .setLatLng(event.latlng)
+      .setContent(`
+        <strong>Looking up place...</strong>
+        Lat/Lon: ${coordinateText(event.latlng)}
+      `)
+      .openOn(state.map);
+
+    try {
+      const result = await lookupPlace(event.latlng);
+      popup.setContent(locationPopupContent(result, event.latlng));
+    } catch (_error) {
+      popup.setContent(`
+        <strong>Sindhupalchok District</strong>
+        Lat/Lon: ${coordinateText(event.latlng)}<br>
+        <span class="popup-muted">Place lookup unavailable for this click.</span>
+      `);
+    }
+  });
 }
 
 async function refreshLiveData() {
@@ -260,7 +461,12 @@ async function start() {
     addPointLayers(rainfall, landslides);
     updateCards();
     updateBars();
+    updateWarningPanel();
+    updateRainfallBars();
+    updateValidationSignal();
+    updateHotspots();
     bindControls();
+    bindMapClickLookup();
   } catch (error) {
     console.error(error);
     document.getElementById("updatedAt").textContent =

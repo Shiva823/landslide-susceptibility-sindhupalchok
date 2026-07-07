@@ -10,7 +10,7 @@
       integrity="sha256-p4NxAoJBhIINfQwJS7tPHyFhccwF9M1YcS19a8gWg8="
       crossorigin=""
     />
-    <link rel="stylesheet" href="styles.css?v=4" />
+    <link rel="stylesheet" href="styles.css?v=7" />
   </head>
   <body>
     <main class="app-shell">
@@ -40,6 +40,17 @@
           </div>
         </section>
 
+        <section class="panel warning-panel" aria-label="Current warning interpretation">
+          <div class="panel-title">
+            <h2>Current Warning</h2>
+          </div>
+          <div class="warning-verdict">
+            <span id="warningBadge">--</span>
+            <strong id="warningTitle">Reading rainfall signal...</strong>
+          </div>
+          <p class="interpretation" id="warningReason">Loading interpretation.</p>
+        </section>
+
         <section class="panel">
           <div class="panel-title">
             <h2>Rainfall Window</h2>
@@ -63,6 +74,13 @@
           <p class="status-text" id="refreshStatus">
             Uses the latest exported Open-Meteo run.
           </p>
+        </section>
+
+        <section class="panel">
+          <div class="panel-title">
+            <h2>Rainfall Signal</h2>
+          </div>
+          <div class="rain-bars" id="rainfallBars"></div>
         </section>
 
         <section class="panel">
@@ -106,6 +124,30 @@
           </div>
           <div id="riskBars" class="bars"></div>
         </section>
+
+        <section class="panel">
+          <div class="panel-title">
+            <h2>Validation Signal</h2>
+          </div>
+          <div class="validation-compare">
+            <div>
+              <span id="validationArea">--</span>
+              <small>area mapped high/very high</small>
+            </div>
+            <div>
+              <span id="validationSlides">--</span>
+              <small>inventory points inside those classes</small>
+            </div>
+          </div>
+          <p class="interpretation" id="validationText">Loading validation comparison.</p>
+        </section>
+
+        <section class="panel">
+          <div class="panel-title">
+            <h2>Rainfall Hotspots</h2>
+          </div>
+          <div class="hotspot-list" id="hotspotList"></div>
+        </section>
       </aside>
 
       <section class="map-area">
@@ -123,6 +165,6 @@
       integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
       crossorigin=""
     ></script>
-    <script src="app.js?v=4"></script>
+    <script src="app.js?v=7"></script>
   </body>
 </html>

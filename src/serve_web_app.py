@@ -10,6 +10,9 @@ import os
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 import sys
 import traceback
+from urllib.parse import parse_qs, urlparse
+
+import requests
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
@@ -19,11 +22,63 @@ from src.config import ROOT_DIR
 HOST = "127.0.0.1"
 PORT = 8000
 WEB_DIR = os.path.join(ROOT_DIR, "web_app")
+REVERSE_GEOCODE_CACHE = {}
+
+
+def _first_present(mapping, keys):
+    for key in keys:
+        value = mapping.get(key)
+        if value:
+            return value
+    return None
+
+
+def _place_from_nominatim(payload):
+    address = payload.get("address", {})
+    local_name = _first_present(
+        address,
+        [
+            "hamlet",
+            "locality",
+            "neighbourhood",
+            "suburb",
+            "quarter",
+            "village",
+            "settlement",
+            "road",
+            "residential",
+        ],
+    )
+    municipality = _first_present(
+        address,
+        ["municipality", "city", "town", "county", "state_district"],
+    )
+    district = _first_present(address, ["district", "county", "state_district"])
+    province = _first_present(address, ["state", "province"])
+    fallback_name = payload.get("name") or payload.get("display_name")
+    place_name = local_name or fallback_name or municipality or "Sindhupalchok District"
+
+    return {
+        "place": place_name,
+        "localName": local_name,
+        "municipality": municipality,
+        "district": district,
+        "province": province,
+        "displayName": payload.get("display_name", place_name),
+    }
 
 
 class DashboardHandler(SimpleHTTPRequestHandler):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, directory=WEB_DIR, **kwargs)
+
+    def do_GET(self):
+        parsed = urlparse(self.path)
+        if parsed.path == "/api/reverse-geocode":
+            self._handle_reverse_geocode(parsed.query)
+            return
+
+        super().do_GET()
 
     def do_POST(self):
         if self.path != "/api/refresh":
@@ -51,6 +106,55 @@ class DashboardHandler(SimpleHTTPRequestHandler):
                     ),
                 },
                 status=500,
+            )
+
+    def _handle_reverse_geocode(self, query):
+        params = parse_qs(query)
+        try:
+            lat = float(params.get("lat", [None])[0])
+            lon = float(params.get("lon", [None])[0])
+        except (TypeError, ValueError):
+            self._send_json({"ok": False, "error": "Invalid coordinate"}, status=400)
+            return
+
+        cache_key = (round(lat, 4), round(lon, 4))
+        if cache_key in REVERSE_GEOCODE_CACHE:
+            self._send_json(REVERSE_GEOCODE_CACHE[cache_key])
+            return
+
+        try:
+            response = requests.get(
+                "https://nominatim.openstreetmap.org/reverse",
+                params={
+                    "lat": lat,
+                    "lon": lon,
+                    "format": "jsonv2",
+                    "zoom": 17,
+                    "addressdetails": 1,
+                    "accept-language": "en",
+                },
+                headers={
+                    "User-Agent": "sindhupalchok-landslide-dashboard/1.0",
+                },
+                timeout=10,
+            )
+            response.raise_for_status()
+            payload = response.json()
+            place = _place_from_nominatim(payload)
+            result = {
+                "ok": True,
+                **place,
+            }
+            REVERSE_GEOCODE_CACHE[cache_key] = result
+            self._send_json(result)
+        except Exception as exc:
+            self._send_json(
+                {
+                    "ok": False,
+                    "error": str(exc),
+                    "place": "Sindhupalchok District",
+                },
+                status=502,
             )
 
     def _send_json(self, payload, status=200):
