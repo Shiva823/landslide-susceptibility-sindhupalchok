@@ -443,6 +443,31 @@ function bindControls() {
   document
     .getElementById("refreshButton")
     .addEventListener("click", refreshLiveData);
+
+  // Landing Page transitions
+  const landingPage = document.getElementById("landingPage");
+  document.getElementById("exploreMapBtn").addEventListener("click", () => {
+    landingPage.classList.add("hidden");
+    if (state.map) {
+      setTimeout(() => {
+        state.map.invalidateSize();
+      }, 400);
+    }
+  });
+
+  document.getElementById("backToHomeBtn").addEventListener("click", () => {
+    landingPage.classList.remove("hidden");
+  });
+
+  // Sidebar collapse toggle
+  document.getElementById("sidebarToggleBtn").addEventListener("click", () => {
+    const appShell = document.querySelector(".app-shell");
+    appShell.classList.toggle("sidebar-collapsed");
+    // Give the CSS transition time to finish before telling Leaflet to resize
+    setTimeout(() => {
+      if (state.map) state.map.invalidateSize();
+    }, 320);
+  });
 }
 
 async function start() {

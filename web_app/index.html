@@ -1,170 +1,265 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Sindhupalchok Landslide Warning</title>
-    <link
-      rel="stylesheet"
-      href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-      integrity="sha256-p4NxAoJBhIINfQwJS7tPHyFhccwF9M1YcS19a8gWg8="
-      crossorigin=""
-    />
-    <link rel="stylesheet" href="styles.css?v=7" />
-  </head>
-  <body>
-    <main class="app-shell">
-      <aside class="sidebar">
-        <section class="brand">
-          <p class="eyebrow">Sindhupalchok District</p>
-          <h1>Landslide Warning Dashboard</h1>
-          <p class="timestamp" id="updatedAt">Loading live rainfall run...</p>
-        </section>
 
-        <section class="panel metrics-grid" aria-label="Current warning metrics">
-          <div class="metric">
-            <span>Max 1h Rain</span>
-            <strong id="maxRain1h">--</strong>
-          </div>
-          <div class="metric">
-            <span>Max 24h Rain</span>
-            <strong id="maxRain24h">--</strong>
-          </div>
-          <div class="metric">
-            <span>High + Severe</span>
-            <strong id="highSevereArea">--</strong>
-          </div>
-          <div class="metric">
-            <span>Severe Area</span>
-            <strong id="severeArea">--</strong>
-          </div>
-        </section>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Sindhupalchok Landslide Warning</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    integrity="sha256-p4NxAoJBhIINfQwJS7tPHyFhccwF9M1YcS19a8gWg8=" crossorigin="" />
+  <link rel="stylesheet" href="styles.css?v=7" />
+</head>
 
-        <section class="panel warning-panel" aria-label="Current warning interpretation">
-          <div class="panel-title">
-            <h2>Current Warning</h2>
-          </div>
-          <div class="warning-verdict">
-            <span id="warningBadge">--</span>
-            <strong id="warningTitle">Reading rainfall signal...</strong>
-          </div>
-          <p class="interpretation" id="warningReason">Loading interpretation.</p>
-        </section>
-
-        <section class="panel">
-          <div class="panel-title">
-            <h2>Rainfall Window</h2>
-          </div>
-          <div class="segmented" id="windowControl" role="tablist">
-            <button class="active" data-window="combined">Combined</button>
-            <button data-window="1h">1h</button>
-            <button data-window="3h">3h</button>
-            <button data-window="24h">24h</button>
-            <button data-window="72h">72h</button>
-          </div>
-        </section>
-
-        <section class="panel">
-          <div class="panel-title">
-            <h2>Live Update</h2>
-          </div>
-          <button class="refresh-button" id="refreshButton" type="button">
-            Refresh rainfall and risk map
-          </button>
-          <p class="status-text" id="refreshStatus">
-            Uses the latest exported Open-Meteo run.
-          </p>
-        </section>
-
-        <section class="panel">
-          <div class="panel-title">
-            <h2>Rainfall Signal</h2>
-          </div>
-          <div class="rain-bars" id="rainfallBars"></div>
-        </section>
-
-        <section class="panel">
-          <div class="panel-title">
-            <h2>Map Layers</h2>
-          </div>
-          <label class="toggle-row">
-            <input type="checkbox" id="riskToggle" checked />
-            <span>Dynamic warning map</span>
-          </label>
-          <label class="toggle-row">
-            <input type="checkbox" id="susceptibilityToggle" />
-            <span>Static susceptibility</span>
-          </label>
-          <label class="toggle-row">
-            <input type="checkbox" id="rainfallToggle" checked />
-            <span>Rainfall sample points</span>
-          </label>
-          <label class="toggle-row">
-            <input type="checkbox" id="landslideToggle" />
-            <span>Landslide inventory points</span>
-          </label>
-        </section>
-
-        <section class="panel">
-          <div class="panel-title">
-            <h2>Warning Classes</h2>
-          </div>
-          <div class="legend">
-            <span><i style="background:#2c7bb6"></i>Low</span>
-            <span><i style="background:#abd9e9"></i>Guarded</span>
-            <span><i style="background:#ffffbf"></i>Moderate</span>
-            <span><i style="background:#fdae61"></i>High</span>
-            <span><i style="background:#d7191c"></i>Severe</span>
-          </div>
-        </section>
-
-        <section class="panel">
-          <div class="panel-title">
-            <h2>Risk Distribution</h2>
-          </div>
-          <div id="riskBars" class="bars"></div>
-        </section>
-
-        <section class="panel">
-          <div class="panel-title">
-            <h2>Validation Signal</h2>
-          </div>
-          <div class="validation-compare">
-            <div>
-              <span id="validationArea">--</span>
-              <small>area mapped high/very high</small>
-            </div>
-            <div>
-              <span id="validationSlides">--</span>
-              <small>inventory points inside those classes</small>
-            </div>
-          </div>
-          <p class="interpretation" id="validationText">Loading validation comparison.</p>
-        </section>
-
-        <section class="panel">
-          <div class="panel-title">
-            <h2>Rainfall Hotspots</h2>
-          </div>
-          <div class="hotspot-list" id="hotspotList"></div>
-        </section>
-      </aside>
-
-      <section class="map-area">
-        <div id="map" aria-label="Interactive landslide warning map"></div>
-        <div class="map-caption">
-          <strong>Dynamic risk</strong> combines the static susceptibility map
-          with recent Open-Meteo rainfall totals. Static terrain susceptibility
-          itself does not change in real time.
+<body>
+  <!-- Landing Page Overlay -->
+  <div id="landingPage" class="landing-container">
+    <header class="landing-header">
+      <div class="landing-logo">
+        <div class="logo-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path
+              d="M20 13c0 5-3.5 7.5-7.66 9.7a1 1 0 0 1-.68 0C7.5 20.5 4 18 4 13V6a1 1 0 0 1 .76-.97l8.25-2a1 1 0 0 1 .48 0l8.25 2A1 1 0 0 1 20 6z" />
+          </svg>
         </div>
-      </section>
+        <div>
+          <div class="logo-text">Pahiro Alert</div>
+          <div class="logo-subtext">Landslide Risk Intelligence Platform</div>
+        </div>
+      </div>
+    </header>
+
+    <main class="landing-hero">
+      <div class="hero-left">
+        <div class="hero-tag">
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path
+              d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275Z" />
+          </svg>
+          ML-Powered Landslide Intelligence
+        </div>
+        <p class="hero-eyebrow">Sindhupalchok District · Nepal</p>
+        <h1 class="hero-title">Classifying Landslides Before They Happen</h1>
+        <p class="hero-description">
+          Pahiro Alert turns environmental signals into clear action, helping teams detect risk
+          and protect communities across vulnerable terrain.
+        </p>
+        <button id="exploreMapBtn" class="cta-button">
+          Explore Risk Map
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M5 12h14" />
+            <path d="m12 5 7 7-7 7" />
+          </svg>
+        </button>
+      </div>
+
+      <div class="hero-right">
+        <img src="assets/UI-Elements/main_page-img.png" alt="Pahiro Alert Illustration" class="hero-image" />
+      </div>
     </main>
 
-    <script
-      src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
-      integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
-      crossorigin=""
-    ></script>
-    <script src="app.js?v=7"></script>
-  </body>
+    <footer class="landing-footer">
+      <div class="footer-container">
+        <!-- Stats Row -->
+        <div class="footer-stats">
+          <div class="footer-stat">
+            <span class="stat-num">83.8%</span>
+            <span class="stat-lbl">Model Accuracy</span>
+          </div>
+          <div class="footer-stat-divider"></div>
+          <div class="footer-stat">
+            <span class="stat-num">Sindhupalchok</span>
+            <span class="stat-lbl">Coverage Area</span>
+          </div>
+        </div>
+
+        <!-- Features Row -->
+        <div class="footer-features">
+          <div class="footer-feat-item">
+            <div class="feat-dot bg-green"></div>
+            <div class="feat-title">Susceptibility Mapping</div>
+            <div class="feat-desc">ML-based slope risk analysis</div>
+          </div>
+          <div class="footer-feat-item">
+            <div class="feat-dot bg-blue"></div>
+            <div class="feat-title">Risk Simulation</div>
+            <div class="feat-desc">Real-time Open-Meteo updates</div>
+          </div>
+          <div class="footer-feat-item">
+            <div class="feat-dot bg-purple"></div>
+            <div class="feat-title">Validation Reports</div>
+            <div class="feat-desc">Accurate historical mapping</div>
+          </div>
+        </div>
+      </div>
+    </footer>
+  </div>
+
+  <main class="app-shell">
+    <aside class="sidebar">
+      <section class="brand">
+        <div class="brand-header-row">
+          <p class="eyebrow">Sindhupalchok District</p>
+          <button id="backToHomeBtn" class="back-home-button" title="Back to Landing Page">
+            Home
+          </button>
+        </div>
+        <h1>Landslide Warning Dashboard</h1>
+        <p class="timestamp" id="updatedAt">Loading live rainfall run...</p>
+      </section>
+
+      <section class="panel metrics-grid" aria-label="Current warning metrics">
+        <div class="metric">
+          <span>Max 1h Rain</span>
+          <strong id="maxRain1h">--</strong>
+        </div>
+        <div class="metric">
+          <span>Max 24h Rain</span>
+          <strong id="maxRain24h">--</strong>
+        </div>
+        <div class="metric">
+          <span>High + Severe</span>
+          <strong id="highSevereArea">--</strong>
+        </div>
+        <div class="metric">
+          <span>Severe Area</span>
+          <strong id="severeArea">--</strong>
+        </div>
+      </section>
+
+      <section class="panel warning-panel" aria-label="Current warning interpretation">
+        <div class="panel-title">
+          <h2>Current Warning</h2>
+        </div>
+        <div class="warning-verdict">
+          <span id="warningBadge">--</span>
+          <strong id="warningTitle">Reading rainfall signal...</strong>
+        </div>
+        <p class="interpretation" id="warningReason">Loading interpretation.</p>
+      </section>
+
+      <section class="panel">
+        <div class="panel-title">
+          <h2>Rainfall Window</h2>
+        </div>
+        <div class="segmented" id="windowControl" role="tablist">
+          <button class="active" data-window="combined">Combined</button>
+          <button data-window="1h">1h</button>
+          <button data-window="3h">3h</button>
+          <button data-window="24h">24h</button>
+          <button data-window="72h">72h</button>
+        </div>
+      </section>
+
+      <section class="panel">
+        <div class="panel-title">
+          <h2>Live Update</h2>
+        </div>
+        <button class="refresh-button" id="refreshButton" type="button">
+          Refresh rainfall and risk map
+        </button>
+        <p class="status-text" id="refreshStatus">
+          Uses the latest exported Open-Meteo run.
+        </p>
+      </section>
+
+      <section class="panel">
+        <div class="panel-title">
+          <h2>Rainfall Signal</h2>
+        </div>
+        <div class="rain-bars" id="rainfallBars"></div>
+      </section>
+
+      <section class="panel">
+        <div class="panel-title">
+          <h2>Map Layers</h2>
+        </div>
+        <label class="toggle-row">
+          <input type="checkbox" id="riskToggle" checked />
+          <span>Dynamic warning map</span>
+        </label>
+        <label class="toggle-row">
+          <input type="checkbox" id="susceptibilityToggle" />
+          <span>Static susceptibility</span>
+        </label>
+        <label class="toggle-row">
+          <input type="checkbox" id="rainfallToggle" checked />
+          <span>Rainfall sample points</span>
+        </label>
+        <label class="toggle-row">
+          <input type="checkbox" id="landslideToggle" />
+          <span>Landslide inventory points</span>
+        </label>
+      </section>
+
+      <section class="panel">
+        <div class="panel-title">
+          <h2>Warning Classes</h2>
+        </div>
+        <div class="legend">
+          <span><i style="background:#2c7bb6"></i>Low</span>
+          <span><i style="background:#abd9e9"></i>Guarded</span>
+          <span><i style="background:#ffffbf"></i>Moderate</span>
+          <span><i style="background:#fdae61"></i>High</span>
+          <span><i style="background:#d7191c"></i>Severe</span>
+        </div>
+      </section>
+
+      <section class="panel">
+        <div class="panel-title">
+          <h2>Risk Distribution</h2>
+        </div>
+        <div id="riskBars" class="bars"></div>
+      </section>
+
+      <section class="panel">
+        <div class="panel-title">
+          <h2>Validation Signal</h2>
+        </div>
+        <div class="validation-compare">
+          <div>
+            <span id="validationArea">--</span>
+            <small>area mapped high/very high</small>
+          </div>
+          <div>
+            <span id="validationSlides">--</span>
+            <small>inventory points inside those classes</small>
+          </div>
+        </div>
+        <p class="interpretation" id="validationText">Loading validation comparison.</p>
+      </section>
+
+      <section class="panel">
+        <div class="panel-title">
+          <h2>Rainfall Hotspots</h2>
+        </div>
+        <div class="hotspot-list" id="hotspotList"></div>
+      </section>
+    </aside>
+
+    <!-- Sidebar toggle button -->
+    <button id="sidebarToggleBtn" class="sidebar-toggle-btn" title="Toggle sidebar" aria-label="Toggle sidebar">
+      <svg id="sidebarToggleIcon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
+        fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M15 18l-6-6 6-6" />
+      </svg>
+    </button>
+
+    <section class="map-area">
+      <div id="map" aria-label="Interactive landslide warning map"></div>
+      <div class="map-caption">
+        <strong>Dynamic risk</strong> combines the static susceptibility map
+        with recent Open-Meteo rainfall totals. Static terrain susceptibility
+        itself does not change in real time.
+      </div>
+    </section>
+  </main>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+    integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+  <script src="app.js?v=7"></script>
+</body>
+
 </html>
