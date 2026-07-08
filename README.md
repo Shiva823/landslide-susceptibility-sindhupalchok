@@ -7,8 +7,6 @@ susceptibility mapping of Sindhupalchok District, Nepal. It combines static
 terrain features with live rainfall data to produce both a **static
 susceptibility map** and a **dynamic landslide warning dashboard**.
 
-**Supervisor:** Suman Shrestha — Kathmandu University, COMP 313
-
 ## Team
 
 | Name                  
