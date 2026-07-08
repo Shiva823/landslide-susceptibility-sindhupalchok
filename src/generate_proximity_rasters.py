@@ -3,7 +3,7 @@ import geopandas as gpd
 import json
 import time
 
-ee.Initialize(project='lsms-497103')
+ee.Initialize()  # using default project (no hard‑coded ID)
 print("✅ GEE initialized!")
 
 # ============================================================

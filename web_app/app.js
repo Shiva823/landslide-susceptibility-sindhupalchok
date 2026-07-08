@@ -18,6 +18,13 @@ const state = {
   currentWindow: "combined",
 };
 
+// On page load, if the user was previously on the map view, keep the landing page hidden.
+const showMapFlag = sessionStorage.getItem('showMap');
+if (showMapFlag === 'true') {
+  const landingPage = document.getElementById('landingPage');
+  if (landingPage) landingPage.classList.add('hidden');
+}
+
 const formatNumber = (value, digits = 1) =>
   Number(value).toLocaleString(undefined, {
     maximumFractionDigits: digits,
@@ -403,10 +410,11 @@ async function refreshLiveData() {
       throw new Error(message);
     }
     status.textContent = "Refresh complete. Reloading dashboard.";
+    // Remember that we want to stay on the map view after reload.
+    sessionStorage.setItem('showMap', 'true');
     window.location.reload();
   } catch (error) {
-    status.textContent =
-      `Live refresh failed: ${error.message}`;
+    status.textContent = `Live refresh failed: ${error.message}`;
     button.disabled = false;
     button.textContent = "Refresh rainfall and risk map";
   }
@@ -448,6 +456,8 @@ function bindControls() {
   const landingPage = document.getElementById("landingPage");
   document.getElementById("exploreMapBtn").addEventListener("click", () => {
     landingPage.classList.add("hidden");
+    // Persist the map view state.
+    sessionStorage.setItem('showMap', 'true');
     if (state.map) {
       setTimeout(() => {
         state.map.invalidateSize();
@@ -457,6 +467,8 @@ function bindControls() {
 
   document.getElementById("backToHomeBtn").addEventListener("click", () => {
     landingPage.classList.remove("hidden");
+    // Clear persisted flag when returning home.
+    sessionStorage.removeItem('showMap');
   });
 
   // Sidebar collapse toggle
