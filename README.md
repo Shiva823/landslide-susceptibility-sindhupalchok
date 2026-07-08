@@ -11,13 +11,13 @@ susceptibility map** and a **dynamic landslide warning dashboard**.
 
 ## Team
 
-| Name                  | Roll |
-| --------------------- | ---- |
-| Shiva Acharya         | 01   |
-| Utsav Adhikari        | 03   |
-| Aayushman Bajracharya | 05   |
-| Suniti Shrestha       | 51   |
-| Silviya Thapa         | 55   |
+| Name                  
+| --------------------- 
+Shiva Acharya         
+Utsav Adhikari       
+Aayushman Bajracharya 
+Suniti Shrestha       
+Silviya Thapa         
 
 ---
 
