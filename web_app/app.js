@@ -395,10 +395,15 @@ async function refreshLiveData() {
     if (!response.ok) {
       let message = "Refresh endpoint is not available.";
       try {
-        const payload = await response.json();
-        message = payload.error || message;
-      } catch (_error) {
-        message = await response.text();
+        const textResponse = await response.text();
+        try {
+          const payload = JSON.parse(textResponse);
+          message = payload.error || message;
+        } catch (e) {
+          message = textResponse || message;
+        }
+      } catch (e) {
+        // If even reading text fails, keep default
       }
       throw new Error(message);
     }
