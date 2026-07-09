@@ -16,6 +16,7 @@ __pycache__/
 data/raw/rasters/*.tif
 data/processed/rasters/*.tif
 outputs/maps/*.tif
+!outputs/maps/susceptibility_map.tif
 
 # Model files (large)
 outputs/models/*.pkl
