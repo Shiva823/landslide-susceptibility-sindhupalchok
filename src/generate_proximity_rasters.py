@@ -1,9 +1,16 @@
 import ee
 import geopandas as gpd
 import json
+import os
 import time
+from dotenv import load_dotenv
 
-ee.Initialize(project='lsms-497103')
+load_dotenv()  # loads variables from .env file
+
+_project = os.getenv("EE_PROJECT")
+if not _project:
+    raise RuntimeError("EE_PROJECT is not set. Add it to your .env file.")
+ee.Initialize(project=_project)
 print("✅ GEE initialized!")
 
 # ============================================================

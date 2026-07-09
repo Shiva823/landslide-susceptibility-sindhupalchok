@@ -11,17 +11,22 @@ from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 import sys
 import traceback
 from urllib.parse import parse_qs, urlparse
+from dotenv import load_dotenv
 
 import requests
+
+load_dotenv()  # load variables from .env
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from src.config import ROOT_DIR
 
 
-HOST = "127.0.0.1"
-PORT = 8000
+HOST = "0.0.0.0"
+PORT = int(os.getenv("PORT", 8000))
 WEB_DIR = os.path.join(ROOT_DIR, "web_app")
+NOMINATIM_URL = os.getenv("NOMINATIM_URL", "https://nominatim.openstreetmap.org/reverse")
+NOMINATIM_USER_AGENT = os.getenv("NOMINATIM_USER_AGENT", "sindhupalchok-landslide-dashboard/1.0")
 REVERSE_GEOCODE_CACHE = {}
 
 
@@ -124,7 +129,7 @@ class DashboardHandler(SimpleHTTPRequestHandler):
 
         try:
             response = requests.get(
-                "https://nominatim.openstreetmap.org/reverse",
+                NOMINATIM_URL,
                 params={
                     "lat": lat,
                     "lon": lon,
@@ -134,7 +139,7 @@ class DashboardHandler(SimpleHTTPRequestHandler):
                     "accept-language": "en",
                 },
                 headers={
-                    "User-Agent": "sindhupalchok-landslide-dashboard/1.0",
+                    "User-Agent": NOMINATIM_USER_AGENT,
                 },
                 timeout=10,
             )

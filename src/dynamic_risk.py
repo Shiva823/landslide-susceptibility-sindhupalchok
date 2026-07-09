@@ -9,6 +9,9 @@ import os
 import sys
 from datetime import datetime
 from zoneinfo import ZoneInfo
+from dotenv import load_dotenv
+
+load_dotenv()  # load variables from .env
 
 import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
@@ -25,7 +28,7 @@ from src.config import BOUNDARY_SHP, FIGURES_DIR, MAPS_DIR, SUSCEPTIBILITY_MAP
 from src.validation import _load_boundary_lines
 
 
-OPEN_METEO_URL = "https://api.open-meteo.com/v1/forecast"
+OPEN_METEO_URL = os.getenv("OPEN_METEO_URL", "https://api.open-meteo.com/v1/forecast")
 LOCAL_TIMEZONE = "Asia/Kathmandu"
 
 DYNAMIC_RISK_MAP = os.path.join(MAPS_DIR, "dynamic_landslide_risk_map.tif")
