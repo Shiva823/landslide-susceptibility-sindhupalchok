@@ -7,30 +7,29 @@
   <title>Sindhupalchok Landslide Warning</title>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
     integrity="sha256-p4NxAoJBhIINfQwJS7tPHyFhccwF9M1YcS19a8gWg8=" crossorigin="" />
-  <link rel="stylesheet" href="styles.css?v=7" />
+  <link rel="stylesheet" href="styles.css?v=10" />
 </head>
 
 <body>
   <!-- Landing Page Overlay -->
   <div id="landingPage" class="landing-container">
-    <header class="landing-header">
-      <div class="landing-logo">
-        <div class="logo-icon">
-          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
-            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path
-              d="M20 13c0 5-3.5 7.5-7.66 9.7a1 1 0 0 1-.68 0C7.5 20.5 4 18 4 13V6a1 1 0 0 1 .76-.97l8.25-2a1 1 0 0 1 .48 0l8.25 2A1 1 0 0 1 20 6z" />
-          </svg>
-        </div>
-        <div>
-          <div class="logo-text">Pahiro Alert</div>
-          <div class="logo-subtext">Landslide Risk Intelligence Platform</div>
-        </div>
-      </div>
-    </header>
+
 
     <main class="landing-hero">
       <div class="hero-left">
+        <div class="landing-logo hero-logo">
+          <div class="logo-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path
+                d="M20 13c0 5-3.5 7.5-7.66 9.7a1 1 0 0 1-.68 0C7.5 20.5 4 18 4 13V6a1 1 0 0 1 .76-.97l8.25-2a1 1 0 0 1 .48 0l8.25 2A1 1 0 0 1 20 6z" />
+            </svg>
+          </div>
+          <div>
+            <div class="logo-text">Pahiro Alert</div>
+            <div class="logo-subtext">Landslide Risk Intelligence Platform</div>
+          </div>
+        </div>
         <div class="hero-tag">
           <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
             stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -163,6 +162,15 @@
         <p class="status-text" id="refreshStatus">
           Uses the latest exported Open-Meteo run.
         </p>
+        <div id="refreshProgressWrap" class="refresh-progress-wrap" style="display:none">
+          <div class="refresh-progress-header">
+            <span id="refreshProgressPct" class="refresh-pct">0%</span>
+            <span id="refreshProgressTimer" class="refresh-timer">00:00</span>
+          </div>
+          <div class="refresh-progress-track">
+            <div id="refreshProgressBar" class="refresh-progress-bar"></div>
+          </div>
+        </div>
       </section>
 
       <section class="panel">
@@ -172,40 +180,7 @@
         <div class="rain-bars" id="rainfallBars"></div>
       </section>
 
-      <section class="panel">
-        <div class="panel-title">
-          <h2>Map Layers</h2>
-        </div>
-        <label class="toggle-row">
-          <input type="checkbox" id="riskToggle" checked />
-          <span>Dynamic warning map</span>
-        </label>
-        <label class="toggle-row">
-          <input type="checkbox" id="susceptibilityToggle" />
-          <span>Static susceptibility</span>
-        </label>
-        <label class="toggle-row">
-          <input type="checkbox" id="rainfallToggle" checked />
-          <span>Rainfall sample points</span>
-        </label>
-        <label class="toggle-row">
-          <input type="checkbox" id="landslideToggle" />
-          <span>Landslide inventory points</span>
-        </label>
-      </section>
 
-      <section class="panel">
-        <div class="panel-title">
-          <h2>Warning Classes</h2>
-        </div>
-        <div class="legend">
-          <span><i style="background:#2c7bb6"></i>Low</span>
-          <span><i style="background:#abd9e9"></i>Guarded</span>
-          <span><i style="background:#ffffbf"></i>Moderate</span>
-          <span><i style="background:#fdae61"></i>High</span>
-          <span><i style="background:#d7191c"></i>Severe</span>
-        </div>
-      </section>
 
       <section class="panel">
         <div class="panel-title">
@@ -249,6 +224,52 @@
 
     <section class="map-area">
       <div id="map" aria-label="Interactive landslide warning map"></div>
+
+      <!-- Floating Horizontal Legend (Top Center) -->
+      <div class="floating-legend" aria-label="Warning Classes Legend">
+        <span class="legend-title">Warning Classes</span>
+        <div class="legend-items">
+          <span class="legend-item"><i style="background:#2c7bb6"></i>Low</span>
+          <span class="legend-item"><i style="background:#abd9e9"></i>Guarded</span>
+          <span class="legend-item"><i style="background:#ffffbf"></i>Moderate</span>
+          <span class="legend-item"><i style="background:#fdae61"></i>High</span>
+          <span class="legend-item"><i style="background:#d7191c"></i>Severe</span>
+        </div>
+      </div>
+
+      <!-- Floating Google Maps Style Layers Control (Top Right) -->
+      <div class="floating-layers-control">
+        <button class="layers-btn" title="Map Layers" aria-label="Toggle map layers">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polygon points="12 2 2 7 12 12 22 7 12 2" />
+            <polyline points="2 17 12 22 22 17" />
+            <polyline points="2 12 12 17 22 12" />
+          </svg>
+        </button>
+        <div class="layers-dropdown">
+          <div class="dropdown-header">Map Layers</div>
+          <div class="dropdown-content">
+            <label class="toggle-row">
+              <input type="checkbox" id="riskToggle" checked />
+              <span>Dynamic warning map</span>
+            </label>
+            <label class="toggle-row">
+              <input type="checkbox" id="susceptibilityToggle" />
+              <span>Static susceptibility</span>
+            </label>
+            <label class="toggle-row">
+              <input type="checkbox" id="rainfallToggle" checked />
+              <span>Rainfall sample points</span>
+            </label>
+            <label class="toggle-row">
+              <input type="checkbox" id="landslideToggle" />
+              <span>Landslide inventory points</span>
+            </label>
+          </div>
+        </div>
+      </div>
+
       <div class="map-caption">
         <strong>Dynamic risk</strong> combines the static susceptibility map
         with recent Open-Meteo rainfall totals. Static terrain susceptibility
@@ -259,7 +280,7 @@
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
     integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
-  <script src="app.js?v=7"></script>
+  <script src="app.js?v=10"></script>
 </body>
 
 </html>

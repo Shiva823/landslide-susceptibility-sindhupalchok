@@ -5,6 +5,8 @@ Run:
     python -m src.serve_web_app
 """
 
+import matplotlib
+matplotlib.use('Agg')
 import json
 import os
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
@@ -77,13 +79,24 @@ class DashboardHandler(SimpleHTTPRequestHandler):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, directory=WEB_DIR, **kwargs)
 
+    def end_headers(self):
+        self.send_header("Cache-Control", "no-store, no-cache, must-revalidate, max-age=0")
+        self.send_header("Pragma", "no-cache")
+        self.send_header("Expires", "0")
+        super().end_headers()
+
+
     def do_GET(self):
         parsed = urlparse(self.path)
         if parsed.path == "/api/reverse-geocode":
             self._handle_reverse_geocode(parsed.query)
             return
+        if parsed.path == "/api/refresh/stream":
+            self._handle_refresh_stream()
+            return
 
         super().do_GET()
+
 
     def do_POST(self):
         if self.path != "/api/refresh":
@@ -112,6 +125,39 @@ class DashboardHandler(SimpleHTTPRequestHandler):
                 },
                 status=500,
             )
+
+    def _handle_refresh_stream(self):
+        """Stream SSE progress events for the refresh pipeline."""
+        self.send_response(200)
+        self.send_header("Content-Type", "text/event-stream")
+        self.send_header("Cache-Control", "no-cache")
+        self.send_header("X-Accel-Buffering", "no")
+        self.end_headers()
+
+        def emit(pct, msg):
+            payload = json.dumps({"pct": pct, "msg": msg})
+            try:
+                self.wfile.write(f"data: {payload}\n\n".encode("utf-8"))
+                self.wfile.flush()
+            except Exception:
+                pass
+
+        try:
+            emit(5, "Initialising pipeline…")
+            from src.dynamic_risk import generate_dynamic_landslide_risk_map
+            from src.export_web_app import export_web_app_assets
+
+            generate_dynamic_landslide_risk_map(progress_callback=emit)
+            export_web_app_assets(progress_callback=emit)
+
+        except Exception as exc:
+            traceback.print_exc()
+            error_payload = json.dumps({"pct": -1, "error": str(exc)})
+            try:
+                self.wfile.write(f"data: {error_payload}\n\n".encode("utf-8"))
+                self.wfile.flush()
+            except Exception:
+                pass
 
     def _handle_reverse_geocode(self, query):
         params = parse_qs(query)
@@ -173,7 +219,8 @@ class DashboardHandler(SimpleHTTPRequestHandler):
 
 def serve_web_app(host=HOST, port=PORT):
     server = ThreadingHTTPServer((host, port), DashboardHandler)
-    print(f"Serving dashboard at http://{host}:{port}/")
+    display_host = "localhost" if host == "0.0.0.0" else host
+    print(f"Serving dashboard at http://{display_host}:{port}/")
     print("Use Ctrl+C to stop.")
     server.serve_forever()
 

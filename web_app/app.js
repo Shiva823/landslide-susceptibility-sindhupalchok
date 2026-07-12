@@ -383,35 +383,145 @@ function bindMapClickLookup() {
   });
 }
 
+async function reloadDashboardInPlace() {
+  try {
+    const [appData, rainfall] = await Promise.all([
+      loadJson("data/app-data.json"),
+      loadJson("data/rainfall_points.geojson"),
+    ]);
+    state.data = appData;
+
+    // Update raster overlays
+    if (state.riskLayer && state.map.hasLayer(state.riskLayer)) {
+      state.map.removeLayer(state.riskLayer);
+    }
+    state.riskLayer = makeImageLayer(
+      state.data.overlays.risk[state.currentWindow],
+      state.data.bounds.risk,
+      0.9,
+    );
+    if (document.getElementById("riskToggle").checked) {
+      state.riskLayer.addTo(state.map);
+    }
+
+    // Update rainfall markers
+    if (state.rainfallLayer && state.map.hasLayer(state.rainfallLayer)) {
+      state.map.removeLayer(state.rainfallLayer);
+    }
+    rainfall.features.forEach((feature, index) => {
+      feature.properties.sample_index = index + 1;
+    });
+    state.rainfallMarkers.clear();
+    state.rainfallLayer = L.geoJSON(rainfall, {
+      pointToLayer: (feature, latlng) => {
+        const trigger = Number(feature.properties.rainfall_trigger_score || 0);
+        return L.circleMarker(latlng, {
+          radius: 4 + trigger * 5,
+          color: "#0f172a",
+          weight: 1,
+          fillColor: "#38bdf8",
+          fillOpacity: 0.9,
+          pane: "markerPane",
+        });
+      },
+      onEachFeature: (feature, layer) => {
+        state.rainfallMarkers.set(feature.properties.sample_index, layer);
+        layer.bindPopup(markerPopup(feature.properties));
+      },
+    });
+    if (document.getElementById("rainfallToggle").checked) {
+      state.rainfallLayer.addTo(state.map);
+    }
+
+    // Refresh all sidebar panels
+    updateCards();
+    updateBars();
+    updateWarningPanel();
+    updateRainfallBars();
+    updateValidationSignal();
+    updateHotspots();
+  } catch (err) {
+    console.error("In-place reload failed:", err);
+  }
+}
+
 async function refreshLiveData() {
   const button = document.getElementById("refreshButton");
   const status = document.getElementById("refreshStatus");
+  const progressWrap = document.getElementById("refreshProgressWrap");
+  const progressBar = document.getElementById("refreshProgressBar");
+  const progressPct = document.getElementById("refreshProgressPct");
+  const progressTimer = document.getElementById("refreshProgressTimer");
+
   button.disabled = true;
-  button.textContent = "Refreshing...";
-  status.textContent = "Fetching Open-Meteo rainfall and rebuilding warning layers.";
+  button.textContent = "Refreshing…";
+  progressWrap.style.display = "block";
+  progressBar.style.width = "0%";
+  progressPct.textContent = "0%";
+
+  const startTime = Date.now();
+  let timerInterval = setInterval(() => {
+    const elapsed = Math.floor((Date.now() - startTime) / 1000);
+    const m = Math.floor(elapsed / 60).toString().padStart(2, "0");
+    const s = (elapsed % 60).toString().padStart(2, "0");
+    progressTimer.textContent = `${m}:${s}`;
+  }, 1000);
 
   try {
-    const response = await fetch("/api/refresh", { method: "POST" });
-    if (!response.ok) {
-      let message = "Refresh endpoint is not available.";
-      try {
-        const textResponse = await response.text();
-        try {
-          const payload = JSON.parse(textResponse);
-          message = payload.error || message;
-        } catch (e) {
-          message = textResponse || message;
+    await new Promise((resolve, reject) => {
+      const es = new EventSource("/api/refresh/stream");
+      let resolved = false;
+
+      es.onmessage = (event) => {
+        let data;
+        try { data = JSON.parse(event.data); } catch { return; }
+
+        if (data.pct === -1) {
+          es.close();
+          reject(new Error(data.error || "Refresh failed on server."));
+          return;
         }
-      } catch (e) {
-        // If even reading text fails, keep default
-      }
-      throw new Error(message);
-    }
-    status.textContent = "Refresh complete. Reloading dashboard.";
-    window.location.reload();
+
+        const pct = Math.max(0, Math.min(100, data.pct));
+        progressBar.style.width = `${pct}%`;
+        progressPct.textContent = `${pct}%`;
+        status.textContent = data.msg || "";
+
+        if (pct >= 100) {
+          resolved = true;
+          es.close();
+          resolve();
+        }
+      };
+
+      // onerror fires on normal stream close too — only reject if we
+      // haven't already resolved successfully.
+      es.onerror = () => {
+        es.close();
+        if (!resolved) {
+          reject(new Error("Refresh stream closed before completion."));
+        }
+      };
+    });
+
+    // Success — reload data in-place, no navigation
+    clearInterval(timerInterval);
+    progressBar.style.width = "100%";
+    progressPct.textContent = "100%";
+    status.textContent = "Applying new data to dashboard…";
+    await reloadDashboardInPlace();
+    status.textContent = "✓ Dashboard updated with latest rainfall data.";
+
+    setTimeout(() => {
+      progressWrap.style.display = "none";
+    }, 3000);
+
   } catch (error) {
-    status.textContent =
-      `Live refresh failed: ${error.message}`;
+    clearInterval(timerInterval);
+    progressWrap.style.display = "none";
+    status.textContent = `Refresh failed: ${error.message}`;
+  } finally {
+    clearInterval(timerInterval);
     button.disabled = false;
     button.textContent = "Refresh rainfall and risk map";
   }

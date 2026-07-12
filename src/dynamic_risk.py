@@ -306,15 +306,19 @@ def _write_report(summary, rainfall):
         )
 
 
-def generate_dynamic_landslide_risk_map():
+def generate_dynamic_landslide_risk_map(progress_callback=None):
     if not os.path.exists(SUSCEPTIBILITY_MAP):
         raise FileNotFoundError(
             "Susceptibility map is missing. Run: python main.py --step model"
         )
 
+    if progress_callback:
+        progress_callback(10, "Fetching live rainfall from Open-Meteo...")
     print("Fetching live rainfall from Open-Meteo...")
     rainfall = _build_rainfall_table()
 
+    if progress_callback:
+        progress_callback(30, "Combining rainfall trigger with susceptibility map...")
     print("Combining rainfall trigger with susceptibility map...")
     with rasterio.open(SUSCEPTIBILITY_MAP) as src:
         susceptibility = src.read(1).astype(np.float32)
@@ -322,15 +326,28 @@ def generate_dynamic_landslide_risk_map():
         if src.nodata is not None:
             valid_mask &= susceptibility != src.nodata
         susceptibility = np.clip(susceptibility, 0.0, 1.0)
+        
+        if progress_callback:
+            progress_callback(40, "Interpolating rainfall trigger...")
         rainfall_trigger = _interpolate_rainfall_trigger(rainfall, src)
+        
+        if progress_callback:
+            progress_callback(50, "Calculating dynamic risk...")
         risk = _calculate_dynamic_risk(susceptibility, valid_mask, rainfall_trigger)
         profile = src.profile.copy()
         profile["height"] = src.height
         profile["width"] = src.width
 
+    if progress_callback:
+        progress_callback(60, "Writing risk raster...")
     _write_risk_raster(risk, profile)
+    
+    if progress_callback:
+        progress_callback(65, "Summarizing risk...")
     summary = _summarize_risk(risk, valid_mask, rainfall)
 
+    if progress_callback:
+        progress_callback(70, "Creating dynamic warning figure and report...")
     print("Creating dynamic warning figure and report...")
     _plot_dynamic_risk_map(risk, valid_mask, rainfall, profile)
     _write_report(summary, rainfall)
@@ -344,6 +361,10 @@ def generate_dynamic_landslide_risk_map():
     print(f"  Rainfall points     : {RAINFALL_POINTS_CSV}")
     print(f"  Warning summary     : {DYNAMIC_RISK_SUMMARY_CSV}")
     print(f"  High/Severe area    : {high_area:.1f}%")
+    
+    if progress_callback:
+        progress_callback(80, "Dynamic warning calculations complete.")
+
 
 
 if __name__ == "__main__":

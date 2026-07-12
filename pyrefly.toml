@@ -1,0 +1,15 @@
+[pyrefly]
+# Suppress warning for third-party packages without bundled stubs (e.g. requests)
+ignore_missing_stubs = true
+
+# Exclude files Pyrefly cannot correctly analyse:
+#   - serve_web_app.py uses sys.path.insert() at runtime (static analysis can't follow)
+#   - __pyrefly_virtual__ is the hover-snippet scratch space (always gives parse errors)
+#   - venv is third-party code we don't own
+exclude = [
+  "src/serve_web_app.py",
+  "__pyrefly_virtual__/**",
+  "venv/**",
+  ".venv/**",
+]
+

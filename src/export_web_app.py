@@ -272,15 +272,39 @@ def _write_app_data(susceptibility_bounds, risk_bounds, risk_overlay_paths):
         json.dump(data, handle, indent=2)
 
 
-def export_web_app_assets():
+def export_web_app_assets(progress_callback=None):
+    if progress_callback:
+        progress_callback(82, "Ensuring web app export directories...")
     _ensure_dirs()
+    
+    if progress_callback:
+        progress_callback(85, "Exporting static susceptibility overlay...")
     susceptibility_bounds = _export_susceptibility_overlay()
+    
+    if progress_callback:
+        progress_callback(90, "Exporting dynamic warning risk overlays...")
     risk_bounds, risk_overlay_paths = _export_risk_overlays()
+    
+    if progress_callback:
+        progress_callback(94, "Exporting region boundary layer...")
     _export_boundary()
+    
+    if progress_callback:
+        progress_callback(96, "Exporting rainfall and landslide inventory point layers...")
     _export_points()
+    
+    if progress_callback:
+        progress_callback(98, "Copying dynamic warning report figures...")
     _copy_report_figures()
+    
+    if progress_callback:
+        progress_callback(99, "Writing dashboard configuration and state...")
     _write_app_data(susceptibility_bounds, risk_bounds, risk_overlay_paths)
     print(f"Web app assets exported to: {WEB_DIR}")
+    
+    if progress_callback:
+        progress_callback(100, "Web app assets successfully exported.")
+
 
 
 if __name__ == "__main__":

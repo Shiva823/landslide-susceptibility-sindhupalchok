@@ -21,8 +21,8 @@
 .leaflet-marker-icon,
 .leaflet-marker-shadow,
 .leaflet-tile-container,
-.leaflet-pane > svg,
-.leaflet-pane > canvas,
+.leaflet-pane>svg,
+.leaflet-pane>canvas,
 .leaflet-zoom-box,
 .leaflet-image-layer,
 .leaflet-layer {
@@ -697,11 +697,9 @@ h2 {
 }
 
 .landing-header {
-  max-width: 1280px;
-  margin: 0 auto;
   padding: 24px 32px;
   display: flex;
-  justify-content: space-between;
+  justify-content: flex-start;
   align-items: center;
 }
 
@@ -709,6 +707,10 @@ h2 {
   display: flex;
   align-items: center;
   gap: 12px;
+}
+
+.hero-logo {
+  margin-bottom: 45px;
 }
 
 .logo-icon {
@@ -939,9 +941,17 @@ h2 {
   flex-shrink: 0;
 }
 
-.feat-dot.bg-green { background: #10b981; }
-.feat-dot.bg-blue { background: #0284c7; }
-.feat-dot.bg-purple { background: #7c3aed; }
+.feat-dot.bg-green {
+  background: #10b981;
+}
+
+.feat-dot.bg-blue {
+  background: #0284c7;
+}
+
+.feat-dot.bg-purple {
+  background: #7c3aed;
+}
 
 .feat-title {
   font-size: 13px;
@@ -983,3 +993,183 @@ h2 {
   color: #0f766e;
 }
 
+/* --- Refresh Progress Bar --- */
+.refresh-progress-wrap {
+  margin-top: 10px;
+}
+
+.refresh-progress-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+}
+
+.refresh-pct {
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--accent);
+}
+
+.refresh-timer {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.05em;
+}
+
+.refresh-progress-track {
+  height: 8px;
+  background: #e8edf3;
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.refresh-progress-bar {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, #10b981, #0f766e);
+  border-radius: inherit;
+  transition: width 0.5s ease;
+}
+
+/* --- Floating Color Legend (Top Center) --- */
+.floating-legend {
+  position: absolute;
+  top: 18px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1000;
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid var(--line);
+  border-radius: 30px;
+  padding: 8px 18px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  box-shadow: 0 4px 20px rgba(15, 23, 42, 0.08);
+  font-size: 13px;
+  font-weight: 700;
+  color: #1e293b;
+}
+
+.legend-title {
+  color: var(--muted);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-weight: 800;
+  border-right: 1px solid var(--line);
+  padding-right: 12px;
+}
+
+.legend-items {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.legend-item i {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+/* --- Floating Floating Layers Control (Top Right) --- */
+.floating-layers-control {
+  position: absolute;
+  top: 18px;
+  right: 18px;
+  z-index: 1000;
+}
+
+.layers-btn {
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  background: #ffffff;
+  border: 1px solid var(--line);
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.1);
+  color: #334155;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.layers-btn:hover {
+  background: #f8fafc;
+  color: var(--accent);
+}
+
+.layers-dropdown {
+  position: absolute;
+  top: 48px;
+  right: 0;
+  width: 260px;
+  background: #ffffff;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  box-shadow: var(--shadow);
+  display: none;
+  flex-direction: column;
+  overflow: hidden;
+  animation: slideIn 0.2s ease;
+}
+
+/* Show dropdown when hovering control */
+.floating-layers-control:hover .layers-dropdown {
+  display: flex;
+}
+
+.dropdown-header {
+  padding: 12px 16px;
+  background: #f8fafc;
+  border-bottom: 1px solid var(--line);
+  font-weight: 800;
+  font-size: 13px;
+  color: #0f172a;
+}
+
+.dropdown-content {
+  padding: 8px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (max-width: 768px) {
+  .floating-legend {
+    width: calc(100% - 36px);
+    overflow-x: auto;
+    justify-content: flex-start;
+    top: 12px;
+  }
+  .floating-layers-control {
+    top: 70px;
+    right: 12px;
+  }
+}
