@@ -583,7 +583,22 @@ function bindControls() {
       if (state.map) state.map.invalidateSize();
     }, 320);
   });
+  // Layers panel click-toggle (stays open until clicked again or outside)
+  const layersBtn = document.getElementById("layersBtn");
+  const layersControl = layersBtn.closest(".floating-layers-control");
+  layersBtn.addEventListener("click", (e) => {
+    e.stopPropagation();
+    const isOpen = layersControl.classList.toggle("open");
+    layersBtn.classList.toggle("open", isOpen);
+  });
+  document.addEventListener("click", (e) => {
+    if (!layersControl.contains(e.target)) {
+      layersControl.classList.remove("open");
+      layersBtn.classList.remove("open");
+    }
+  });
 }
+
 
 async function start() {
   try {
