@@ -1,0 +1,112 @@
+\chapter{Design and Implementation}
+
+This chapter details the design and implementation of the Landslide Susceptibility Mapping system for the Sindhupalchok District. Since this project combines machine learning for predicting static susceptibility with software engineering for a dynamic web dashboard, this chapter covers both the machine learning pipeline and the software application architecture.
+
+\section{System Overview}
+The implemented system is a hybrid solution designed to map long-term landslide susceptibility and provide dynamic, real-time landslide warnings based on live weather data. The major components of the system include:
+\begin{itemize}
+    \item \textbf{Data Pipeline \& Preprocessing:} Ingestion and cleaning of geological, topographical, and hydrological spatial datasets (GeoTIFFs and Shapefiles) alongside a historical landslide inventory.
+    \item \textbf{Machine Learning Module:} A supervised learning classification pipeline that trains on historical data to predict susceptibility probabilities using terrain features.
+    \item \textbf{Dynamic Risk Engine:} A module that fetches live rainfall forecasts via the Open-Meteo API to compute a dynamic landslide warning score overlaid on the static susceptibility map.
+    \item \textbf{Web Dashboard:} A frontend interface built with HTML, CSS, JavaScript, and Leaflet.js that visualizes the static maps, dynamic warning areas, and live rainfall data.
+\end{itemize}
+These components interact sequentially: the machine learning model produces a static baseline susceptibility map, which is then fed into the dynamic risk engine. The risk engine combines this map with live weather data to serve updated hazard layers to the web dashboard.
+
+\section{System Requirement Specifications}
+The system requires specific software environments and dependencies to execute the data pipeline, train the models, and serve the dashboard.
+
+\subsection{Software Requirements}
+The development and deployment of the system rely on the following software stack:
+\begin{itemize}
+    \item \textbf{Programming Languages:} Python 3.13+ (for data processing, machine learning, and backend server), HTML/CSS/JavaScript (for the frontend dashboard).
+    \item \textbf{Frameworks and Libraries:} Scikit-Learn (for modeling), Pandas and NumPy (for data manipulation), GeoPandas and Rasterio (for geospatial data processing), and Leaflet.js (for interactive web mapping).
+    \item \textbf{External APIs:} Open-Meteo API for real-time and forecasted rainfall data.
+    \item \textbf{Development Tools:} Git for version control, Python virtual environments (venv) for dependency management.
+    \item \textbf{Operating System:} Developed and tested on Windows, but compatible with Linux and macOS.
+\end{itemize}
+
+\subsubsection{Functional Requirements}
+\begin{itemize}
+    \item The system must preprocess and clean geospatial raster data, removing invalid pixels and statistical outliers.
+    \item The system must train and evaluate multiple machine learning classifiers (Random Forest, SVM, Logistic Regression).
+    \item The system must generate a classified geospatial susceptibility map (GeoTIFF).
+    \item The system must fetch current 1-hour, 3-hour, 24-hour, and 72-hour rainfall totals from the Open-Meteo API.
+    \item The web dashboard must provide interactive map layers (susceptibility, dynamic risk, landslide inventory) that users can toggle.
+\end{itemize}
+
+\subsubsection{Non-Functional Requirements}
+\begin{itemize}
+    \item \textbf{Performance:} The model inference on the full district grid (over 3.1 million valid pixels) should complete efficiently, and the web dashboard must render the dynamic map updates without significant browser lag.
+    \item \textbf{Scalability:} The data pipeline must be modular so that new geographic features or updated landslide inventories can be easily integrated.
+    \item \textbf{Usability:} The dashboard should offer an intuitive interface with clear visual warnings (e.g., color-coded risk areas) and interactive tooltips.
+\end{itemize}
+
+\section{System Design}
+
+\subsection{Architectural Design}
+The system follows a sequential data-to-deployment pipeline architecture, transitioning into a client-server architecture for the web dashboard.
+\begin{enumerate}
+    \item \textbf{Offline Pipeline:} Raw data $\rightarrow$ Exploratory Data Analysis (EDA) $\rightarrow$ Preprocessing $\rightarrow$ Feature Engineering $\rightarrow$ Model Training $\rightarrow$ Map Validation.
+    \item \textbf{Online Pipeline (Web App):} The Python backend server executes the dynamic risk script to fetch live weather, generates new map overlays, and serves them to the Leaflet-based frontend via REST-like patterns.
+\end{enumerate}
+
+\subsection{Module Design}
+The system is divided into several discrete responsibilities:
+\begin{itemize}
+    \item \textbf{Preprocessing Module (\texttt{preprocessing.py}):} Handles masking, missing data (NoData), and outlier removal. Enforces physical bounds for geographic coordinates and features.
+    \item \textbf{Feature Engineering Module (\texttt{features.py}):} Transforms raw spatial data into model-ready tabular formats, including encoding circular features (Aspect) and categorical features (LULC).
+    \item \textbf{Modeling Module (\texttt{model.py} \& \texttt{validation.py}):} Trains machine learning models, outputs performance metrics (ROC-AUC, Precision, Recall), and validates the susceptibility map against real landslide locations.
+    \item \textbf{Dynamic Risk Module (\texttt{dynamic\_risk.py}):} Ingests the baseline susceptibility map and Open-Meteo data to calculate a temporary risk severity score.
+    \item \textbf{Dashboard Module (\texttt{serve\_web\_app.py} \& frontend):} Serves static assets and provides an endpoint to manually trigger a data refresh.
+\end{itemize}
+
+\subsection{Data Design}
+The project relies on a comprehensive spatial dataset rather than a traditional relational database. The data structure includes:
+\begin{itemize}
+    \item \textbf{Rasters (GeoTIFF, 30m resolution):} Slope, DEM (Elevation), Aspect, NDVI, Land Use/Land Cover (LULC), Rainfall, River Proximity, Road Proximity, and Topographic Wetness Index (TWI).
+    \item \textbf{Vector Data:} District boundary shapefiles.
+    \item \textbf{Tabular Data:} A historical landslide inventory starting with 1,434 raw locations. After cleaning, 1,109 valid landslide points were retained. The final balanced training dataset comprises 2,218 rows (1,109 landslide, 1,109 background non-landslide points).
+\end{itemize}
+
+\section{Implementation Details}
+
+\subsection{Data Preprocessing and Feature Engineering}
+Data cleaning involved rigorous spatial validation. Approximately 37-38\% of raster bounding boxes contained NoData values outside the district boundary, which were masked. Landslide points falling on missing raster cells were discarded. Continuous features (Slope, Elevation, NDVI, Rainfall, River/Road Proximity, and TWI) were filtered using a 1.5 $\times$ IQR threshold to remove extreme outliers. 
+
+For feature engineering:
+\begin{itemize}
+    \item \textbf{Aspect} was transformed from linear degrees into \texttt{Aspect\_sin} and \texttt{Aspect\_cos} components to preserve its circular nature.
+    \item \textbf{LULC} was one-hot encoded to accurately represent categorical land-use types.
+    \item Continuous numeric features were scaled for distance-based models (SVM and Logistic Regression) but left unscaled for tree-based models (Random Forest).
+\end{itemize}
+
+\subsection{Machine Learning Implementation}
+
+\subsubsection{Dataset Description}
+The dataset is composed of 9 geographical and climatological features spanning the Sindhupalchok district. The target variable is binary (landslide vs. non-landslide). To avoid class imbalance, the 1,109 cleaned landslide points were matched with 1,109 randomly sampled background points, creating a dataset of 2,218 samples.
+
+\subsubsection{Model Design}
+Three distinct machine learning algorithms were implemented: Random Forest, Support Vector Machine (SVM), and Logistic Regression. Random Forest was selected as the primary model due to its robust handling of unscaled, non-linear environmental data and its superior performance metrics.
+
+\subsubsection{Training and Evaluation}
+A stratified 80/20 split was applied to the balanced dataset, resulting in 1,774 training rows and 444 testing rows. 
+\begin{itemize}
+    \item \textbf{Random Forest (Best Model):} Test ROC-AUC of 0.924, Accuracy of 86.0\%, Precision of 82.8\%, and Recall of 91.0\%.
+    \item \textbf{Support Vector Machine (SVM):} Test ROC-AUC of 0.921, Accuracy of 85.1\%.
+    \item \textbf{Logistic Regression:} Test ROC-AUC of 0.871, Accuracy of 79.5\%.
+\end{itemize}
+
+The final Random Forest model predicted susceptibility for over 3.1 million valid pixels across Sindhupalchok. Validation against historical data demonstrated that \textbf{87.8\% of historical landslides occurred in the High or Very High zones}, despite these zones covering only \textbf{12.9\%} of the district's total area.
+
+\subsection{Software and Dashboard Implementation}
+The web implementation serves as a visual translation of the model's outputs. The \texttt{serve\_web\_app.py} script utilizes standard Python HTTP libraries to host the local dashboard. The frontend, written in vanilla JavaScript with Leaflet.js, loads the static susceptibility GeoTIFF (converted to web assets) and the dynamic risk layers. 
+When the user triggers a refresh, the backend contacts Open-Meteo, calculates new trigger scores (e.g., integrating max 72-hour rainfall totals up to 137.8 mm), and dynamically updates the high/severe warning areas overlaying the map.
+
+\section{Tools and Technologies Used}
+The following tools and libraries were critical to the development process:
+\begin{itemize}
+    \item \textbf{Data Science \& ML:} Scikit-Learn, Pandas, NumPy, Matplotlib
+    \item \textbf{Geospatial Analysis:} GeoPandas, Rasterio, Shapely
+    \item \textbf{Web Technologies:} HTML5, CSS3, JavaScript (ES6+), Leaflet.js
+    \item \textbf{Environment \& DevOps:} Python 3.13, Virtual Environments (venv), Git
+\end{itemize}
